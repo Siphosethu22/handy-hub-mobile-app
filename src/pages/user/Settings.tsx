@@ -3,7 +3,7 @@ import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Settings as SettingsIcon, User, LogOut, Bell } from "lucide-react";
+import { Settings as SettingsIcon, User, LogOut, Bell, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 
@@ -23,9 +23,19 @@ const Settings = () => {
 
   return (
     <div className="pb-20">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="bg-primary text-white p-4">
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white mr-2 hover:bg-primary/90" 
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft size={24} />
+          </Button>
+          <h1 className="text-2xl font-bold">Settings</h1>
+        </div>
       </div>
 
       {/* Profile Card */}

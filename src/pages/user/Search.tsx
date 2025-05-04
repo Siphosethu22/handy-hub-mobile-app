@@ -6,9 +6,10 @@ import { getNearbyProviders } from "../../data/providers";
 import ServiceCard from "../../components/ServiceCard";
 import ProviderCard from "../../components/ProviderCard";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Search = () => {
   const { currentLocation } = useLocationContext();
@@ -44,8 +45,19 @@ const Search = () => {
 
   return (
     <div className="pb-20">
-      {/* Search Header */}
+      {/* Search Header with Back Button */}
       <div className="bg-primary p-4">
+        <div className="flex items-center mb-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white mr-2 hover:bg-primary/90" 
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft size={24} />
+          </Button>
+          <h1 className="text-xl font-bold text-white">Search</h1>
+        </div>
         <div className="relative">
           <SearchIcon 
             size={18} 
@@ -69,7 +81,7 @@ const Search = () => {
             <div 
               key={service.id} 
               onClick={() => setSelectedService(prev => prev === service.id ? null : service.id)}
-              className={`service-card ${selectedService === service.id ? 'ring-2 ring-primary' : ''}`}
+              className={`cursor-pointer rounded-lg border p-3 transition-all ${selectedService === service.id ? 'ring-2 ring-primary border-primary' : 'border-gray-200'}`}
               style={{ borderLeft: `4px solid ${service.color}` }}
             >
               <div className="text-3xl mb-2">{service.icon}</div>

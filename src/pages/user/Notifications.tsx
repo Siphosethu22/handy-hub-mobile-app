@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { useNotifications } from "../../context/NotificationContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Bell } from "lucide-react";
+import { Bell, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -15,8 +15,6 @@ const Notifications = () => {
   
   useEffect(() => {
     // Mark notifications as read when this page is viewed
-    // This is just for demo purposes - in a real app, you might only mark as read
-    // when the user interacts with the notification
     notifications.forEach(notification => {
       if (!notification.read) {
         markAsRead(notification.id);
@@ -46,9 +44,19 @@ const Notifications = () => {
 
   return (
     <div className="pb-20">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="bg-primary text-white p-4">
-        <h1 className="text-2xl font-bold">Notifications</h1>
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white mr-2 hover:bg-primary/90" 
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft size={24} />
+          </Button>
+          <h1 className="text-2xl font-bold">Notifications</h1>
+        </div>
       </div>
       
       {/* Notifications */}

@@ -13,7 +13,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, isProvider?: boolean) => Promise<void>;
   register: (email: string, password: string, name: string, isProvider: boolean) => Promise<void>;
   logout: () => void;
 };
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Mock functions for authentication (will be replaced with Supabase)
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, isProvider: boolean = false) => {
     try {
       setLoading(true);
       // This would be a Supabase auth call
@@ -49,18 +49,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock user based on email (provider check is just for demo)
+      // Force provider status based on the login form selection
       const mockUser = {
         id: "user-" + Math.random().toString(36).substring(2, 9),
         email,
         name: email.split('@')[0],
-        isProvider: email.includes("provider"),
+        isProvider,
         avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=4A80F0&color=fff`
       };
       
       setUser(mockUser);
       localStorage.setItem("user", JSON.stringify(mockUser));
-      toast.success("Logged in successfully!");
+      toast.success(`Logged in as ${isProvider ? "provider" : "customer"}`);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Failed to login. Please try again.");

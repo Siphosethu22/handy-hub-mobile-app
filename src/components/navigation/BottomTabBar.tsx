@@ -18,7 +18,9 @@ const BottomTabBar = () => {
         <div className="relative">
           <Bell size={24} />
           {unreadCount > 0 && (
-            <span className="notification-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
           )}
         </div>
       ), 
@@ -28,14 +30,16 @@ const BottomTabBar = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 px-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 px-4 z-10">
       {tabs.map((tab) => (
         <Link 
           key={tab.path} 
           to={tab.path}
           className={cn(
-            "bottom-tab w-full",
-            location.pathname === tab.path ? "active-tab" : "text-gray-500"
+            "flex flex-col items-center justify-center w-full",
+            location.pathname === tab.path 
+              ? "text-primary" 
+              : "text-gray-500"
           )}
         >
           {tab.icon}
