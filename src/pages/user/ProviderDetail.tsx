@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { providers } from "../../data/providers";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, MapPin, Clock, Star, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationContext";
+import WorkExampleCarousel from "../../components/WorkExampleCarousel";
 
 const ProviderDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -158,6 +158,12 @@ const ProviderDetail = () => {
               )}
             </div>
           </div>
+        </div>
+        
+        {/* Work Examples Section */}
+        <div className="mt-6">
+          <h2 className="font-semibold text-lg mb-3">Previous Work</h2>
+          <WorkExampleCarousel workExamples={provider.workExamples} />
         </div>
         
         {/* Working Hours */}

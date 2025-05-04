@@ -1,4 +1,3 @@
-
 export type Provider = {
   id: string;
   name: string;
@@ -14,6 +13,14 @@ export type Provider = {
   };
   distance?: number; // Calculated based on user location
   verified: boolean;
+  workExamples?: WorkExample[];
+};
+
+export type WorkExample = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  description: string;
 };
 
 export const providers: Provider[] = [
@@ -30,7 +37,21 @@ export const providers: Provider[] = [
       latitude: 37.773972,
       longitude: -122.431297
     },
-    verified: true
+    verified: true,
+    workExamples: [
+      {
+        id: "we1",
+        imageUrl: "https://images.unsplash.com/photo-1492321936769-b49830bc1d1e",
+        title: "Engine Rebuild",
+        description: "Complete engine rebuild for a classic car"
+      },
+      {
+        id: "we2",
+        imageUrl: "https://images.unsplash.com/photo-1466442929976-97f336a657be",
+        title: "Transmission Repair",
+        description: "Fixed transmission issues on a 2018 sedan"
+      }
+    ]
   },
   {
     id: "p2",
@@ -45,7 +66,21 @@ export const providers: Provider[] = [
       latitude: 37.783587,
       longitude: -122.408227
     },
-    verified: true
+    verified: true,
+    workExamples: [
+      {
+        id: "we3",
+        imageUrl: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7",
+        title: "Rewiring Project",
+        description: "Complete house rewiring with modern standards"
+      },
+      {
+        id: "we4",
+        imageUrl: "https://images.unsplash.com/photo-1465379944081-7f47de8d74ac",
+        title: "Smart Home Setup",
+        description: "Full smart home installation with voice controls"
+      }
+    ]
   },
   {
     id: "p3",
