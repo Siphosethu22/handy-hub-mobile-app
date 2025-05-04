@@ -18,8 +18,13 @@ const Index = () => {
   
   useEffect(() => {
     // Check if user is logged in after splash screen completes
-    if (!showSplash && !loading && !user) {
-      navigate("/login");
+    if (!showSplash && !loading) {
+      if (!user) {
+        navigate("/login");
+      } else if (user.isProvider) {
+        // Redirect providers to their dashboard
+        navigate("/provider/dashboard");
+      }
     }
   }, [showSplash, user, loading, navigate]);
 
@@ -52,8 +57,8 @@ const Index = () => {
     );
   }
 
-  // If logged in, show the main UI with bottom tabs
-  if (user) {
+  // If logged in as a regular user, show the main UI with bottom tabs
+  if (user && !user.isProvider) {
     return (
       <div className="min-h-screen bg-gray-50">
         {renderCurrentPage()}

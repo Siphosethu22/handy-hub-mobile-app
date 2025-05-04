@@ -6,12 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isProvider, setIsProvider] = useState(false);
+  
+  // Provider specific fields
+  const [businessName, setBusinessName] = useState("");
+  const [serviceCategory, setServiceCategory] = useState("");
+  const [experience, setExperience] = useState("");
+  
   const { register, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -19,14 +27,32 @@ const Register = () => {
     e.preventDefault();
     
     if (!name || !email || !password) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all required fields");
       return;
     }
     
+    // Additional validation for provider fields
+    if (isProvider) {
+      if (!businessName || !serviceCategory || !experience) {
+        toast.error("Please complete your provider profile");
+        return;
+      }
+    }
+    
     try {
-      await register(email, password, name, isProvider);
-      toast.success("Registration successful!");
-      navigate("/");
+      if (isProvider) {
+        await register(
+          email, 
+          password, 
+          name, 
+          true, 
+          { businessName, serviceCategory, experience }
+        );
+        navigate("/provider/dashboard"); // Redirect providers to their dashboard
+      } else {
+        await register(email, password, name, false);
+        navigate("/"); // Redirect regular users to the home page
+      }
     } catch (error) {
       console.error("Registration failed:", error);
     }
@@ -35,7 +61,7 @@ const Register = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center p-4 bg-gray-50">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-primary">HandyHub</h1>
+        <h1 className="text-4xl font-bold text-primary">FixIt</h1>
         <p className="text-gray-600 mt-2">Find local services instantly</p>
       </div>
       
@@ -46,7 +72,7 @@ const Register = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
+                Full Name *
               </label>
               <Input
                 id="name"
@@ -54,12 +80,13 @@ const Register = () => {
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
               />
             </div>
             
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                Email *
               </label>
               <Input
                 id="email"
@@ -67,12 +94,13 @@ const Register = () => {
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
             
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                Password *
               </label>
               <Input
                 id="password"
@@ -80,6 +108,7 @@ const Register = () => {
                 placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
             
@@ -90,6 +119,72 @@ const Register = () => {
                 onCheckedChange={setIsProvider}
               />
             </div>
+            
+            {/* Provider specific fields */}
+            {isProvider && (
+              <>
+                <Separator className="my-4" />
+                
+                <h3 className="font-medium text-lg mb-3">Provider Details</h3>
+                
+                <div>
+                  <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Name *
+                  </label>
+                  <Input
+                    id="businessName"
+                    type="text"
+                    placeholder="Your business name"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="serviceCategory" className="block text-sm font-medium text-gray-700 mb-1">
+                    Service Category *
+                  </label>
+                  <Select
+                    value={serviceCategory}
+                    onValueChange={setServiceCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a service category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="plumbers">Plumbing</SelectItem>
+                      <SelectItem value="electrical">Electrical</SelectItem>
+                      <SelectItem value="mechanics">Mechanics</SelectItem>
+                      <SelectItem value="cleaners">Cleaning</SelectItem>
+                      <SelectItem value="painters">Painting</SelectItem>
+                      <SelectItem value="handyman">Handyman</SelectItem>
+                      <SelectItem value="tow-trucks">Tow Truck</SelectItem>
+                      <SelectItem value="salons">Beauty & Salon</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
+                    Experience *
+                  </label>
+                  <Select 
+                    value={experience}
+                    onValueChange={setExperience}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Years of experience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1-2 years">1-2 years</SelectItem>
+                      <SelectItem value="3-5 years">3-5 years</SelectItem>
+                      <SelectItem value="5-10 years">5-10 years</SelectItem>
+                      <SelectItem value="10+ years">10+ years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
             
             <div className="pt-2">
               <Button 

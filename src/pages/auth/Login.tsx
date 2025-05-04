@@ -25,7 +25,14 @@ const Login = () => {
     try {
       // Add provider flag to login based on tab selection
       await login(email, password, loginType === "provider");
-      navigate("/");
+      
+      // Redirect based on user type
+      if (loginType === "provider") {
+        navigate("/provider/dashboard");
+      } else {
+        navigate("/");
+      }
+      
       toast.success(`Logged in successfully as ${loginType}`);
     } catch (error) {
       console.error("Login failed:", error);
@@ -141,37 +148,6 @@ const Login = () => {
               Register
             </a>
           </p>
-        </div>
-        
-        {/* Demo accounts for quick testing */}
-        <div className="mt-8 pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-600 mb-2">Demo Accounts:</p>
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => {
-                setEmail("user@example.com");
-                setPassword("password");
-                setLoginType("user");
-              }}
-            >
-              Use Customer Demo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => {
-                setEmail("provider@example.com");
-                setPassword("password");
-                setLoginType("provider");
-              }}
-            >
-              Use Provider Demo
-            </Button>
-          </div>
         </div>
       </div>
     </div>

@@ -8,14 +8,25 @@ type User = {
   name: string;
   isProvider: boolean;
   avatar?: string;
+  // Provider profile fields
+  serviceCategory?: string;
+  experience?: string;
+  businessName?: string;
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, isProvider?: boolean) => Promise<void>;
-  register: (email: string, password: string, name: string, isProvider: boolean) => Promise<void>;
+  register: (email: string, password: string, name: string, isProvider: boolean, providerDetails?: ProviderDetails) => Promise<void>;
   logout: () => void;
+};
+
+// Provider details type for registration
+type ProviderDetails = {
+  businessName: string;
+  serviceCategory: string;
+  experience: string;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,18 +50,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // Mock functions for authentication (will be replaced with Supabase)
+  // These will be replaced with Supabase implementation
   const login = async (email: string, password: string, isProvider: boolean = false) => {
     try {
       setLoading(true);
       // This would be a Supabase auth call
-      // For now, we'll simulate a successful login with mock data
+      // For now, we'll simulate a successful login with temporary data until Supabase is integrated
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Force provider status based on the login form selection
-      const mockUser = {
+      const tempUser = {
         id: "user-" + Math.random().toString(36).substring(2, 9),
         email,
         name: email.split('@')[0],
@@ -58,8 +69,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=4A80F0&color=fff`
       };
       
-      setUser(mockUser);
-      localStorage.setItem("user", JSON.stringify(mockUser));
+      setUser(tempUser);
+      localStorage.setItem("user", JSON.stringify(tempUser));
       toast.success(`Logged in as ${isProvider ? "provider" : "customer"}`);
     } catch (error) {
       console.error("Login error:", error);
@@ -70,25 +81,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, name: string, isProvider: boolean) => {
+  const register = async (email: string, password: string, name: string, isProvider: boolean, providerDetails?: ProviderDetails) => {
     try {
       setLoading(true);
       // This would be a Supabase auth sign-up call
-      // For now, we'll simulate a successful registration
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const mockUser = {
+      const newUser: User = {
         id: "user-" + Math.random().toString(36).substring(2, 9),
         email,
         name,
         isProvider,
-        avatar: `https://ui-avatars.com/api/?name=${name}&background=4A80F0&color=fff`
+        avatar: `https://ui-avatars.com/api/?name=${name}&background=4A80F0&color=fff`,
       };
+
+      // Add provider details if registering as a provider
+      if (isProvider && providerDetails) {
+        newUser.businessName = providerDetails.businessName;
+        newUser.serviceCategory = providerDetails.serviceCategory;
+        newUser.experience = providerDetails.experience;
+      }
       
-      setUser(mockUser);
-      localStorage.setItem("user", JSON.stringify(mockUser));
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
       toast.success("Registration successful!");
     } catch (error) {
       console.error("Registration error:", error);
