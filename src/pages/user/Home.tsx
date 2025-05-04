@@ -37,7 +37,7 @@ const Home = () => {
       <div className="bg-primary text-white p-4">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">HandyHub</h1>
+            <h1 className="text-2xl font-bold">FixIt</h1>
             <p className="text-sm opacity-90">Hello, {user?.name}</p>
           </div>
           <img 
