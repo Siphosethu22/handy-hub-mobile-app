@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Settings, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, Settings, CheckCircle, XCircle, MapPin } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
