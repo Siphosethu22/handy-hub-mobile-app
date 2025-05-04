@@ -1,0 +1,114 @@
+
+import React, { useEffect, useState } from "react";
+import { useLocation as useLocationContext } from "../../context/LocationContext";
+import { serviceCategories } from "../../data/services";
+import { getNearbyProviders } from "../../data/providers";
+import ServiceCard from "../../components/ServiceCard";
+import ProviderCard from "../../components/ProviderCard";
+import { useAuth } from "../../context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { MapPin, ChevronRight } from "lucide-react";
+
+const Home = () => {
+  const { currentLocation, loading: locationLoading } = useLocationContext();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [nearbyProviders, setNearbyProviders] = useState([] as any[]);
+  
+  useEffect(() => {
+    if (currentLocation) {
+      const providers = getNearbyProviders(
+        currentLocation.latitude,
+        currentLocation.longitude
+      );
+      setNearbyProviders(providers.slice(0, 3)); // Only show top 3 on home screen
+    }
+  }, [currentLocation]);
+
+  if (!user) {
+    navigate("/login");
+    return null;
+  }
+
+  return (
+    <div className="pb-20">
+      {/* Header */}
+      <div className="bg-primary text-white p-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">HandyHub</h1>
+            <p className="text-sm opacity-90">Hello, {user?.name}</p>
+          </div>
+          <img 
+            src={user?.avatar || "https://ui-avatars.com/api/?name=User"} 
+            alt="Profile" 
+            className="w-10 h-10 rounded-full"
+          />
+        </div>
+        
+        {/* Location */}
+        <div className="mt-4 flex items-center text-sm">
+          <MapPin size={16} className="mr-1" />
+          {locationLoading ? (
+            <span>Finding your location...</span>
+          ) : (
+            <span>Your location: {currentLocation?.latitude.toFixed(4)}, {currentLocation?.longitude.toFixed(4)}</span>
+          )}
+        </div>
+      </div>
+      
+      {/* Services */}
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Services</h2>
+          <Button 
+            onClick={() => navigate("/search")}
+            variant="ghost" 
+            className="text-sm flex items-center"
+          >
+            View All <ChevronRight size={16} className="ml-1" />
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {serviceCategories.slice(0, 4).map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </div>
+      
+      {/* Nearby Providers */}
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Nearby Providers</h2>
+          <Button 
+            onClick={() => navigate("/search")}
+            variant="ghost" 
+            className="text-sm flex items-center"
+          >
+            View All <ChevronRight size={16} className="ml-1" />
+          </Button>
+        </div>
+        
+        {nearbyProviders.length > 0 ? (
+          <div>
+            {nearbyProviders.map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            {locationLoading ? (
+              <p>Finding providers near you...</p>
+            ) : (
+              <p>No providers found nearby</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Home;

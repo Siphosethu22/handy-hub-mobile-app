@@ -1,14 +1,68 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import SplashScreen from "../components/SplashScreen";
+import BottomTabBar from "../components/navigation/BottomTabBar";
+import Home from "./user/Home";
+import Search from "./user/Search";
+import Notifications from "./user/Notifications";
+import Settings from "./user/Settings";
+import { useLocation as useLocationRoute } from "react-router-dom";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+  const [showSplash, setShowSplash] = useState(true);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocationRoute();
+  
+  useEffect(() => {
+    // Check if user is logged in after splash screen completes
+    if (!showSplash && !loading && !user) {
+      navigate("/login");
+    }
+  }, [showSplash, user, loading, navigate]);
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
+  // Determine which component to render based on the current path
+  const renderCurrentPage = () => {
+    const path = location.pathname;
+    
+    if (path === "/" || path === "/home") {
+      return <Home />;
+    } else if (path === "/search") {
+      return <Search />;
+    } else if (path === "/notifications") {
+      return <Notifications />;
+    } else if (path === "/settings") {
+      return <Settings />;
+    }
+    
+    return <Home />;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // If logged in, show the main UI with bottom tabs
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {renderCurrentPage()}
+        <BottomTabBar />
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default Index;

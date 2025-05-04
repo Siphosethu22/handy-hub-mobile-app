@@ -1,25 +1,54 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
+import { LocationProvider } from "./context/LocationContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Home from "./pages/user/Home";
+import Search from "./pages/user/Search";
+import Notifications from "./pages/user/Notifications";
+import Settings from "./pages/user/Settings";
+import ServiceDetail from "./pages/user/ServiceDetail";
+import ProviderDetail from "./pages/user/ProviderDetail";
+import Dashboard from "./pages/provider/Dashboard";
+import Payment from "./pages/provider/Payment";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <NotificationProvider>
+          <LocationProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/service/:id" element={<ServiceDetail />} />
+                <Route path="/provider/:id" element={<ProviderDetail />} />
+                <Route path="/provider/dashboard" element={<Dashboard />} />
+                <Route path="/provider/payment" element={<Payment />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </LocationProvider>
+        </NotificationProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
