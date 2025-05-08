@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useLocation as useLocationContext } from "../../context/LocationContext";
-import { serviceCategories } from "../../data/services";
-import { getNearbyProviders } from "../../data/providers";
+import { getServiceCategories } from "../../data/services";
+import { getNearbyProviders, Provider } from "../../data/providers";
 import ServiceCard from "../../components/ServiceCard";
 import ProviderCard from "../../components/ProviderCard";
 import { Input } from "@/components/ui/input";
@@ -17,25 +17,54 @@ const Search = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [providers, setProviders] = useState([] as any[]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [serviceCategories, setServiceCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
+  // Load service categories
   useEffect(() => {
-    if (!currentLocation) return;
+    const loadServices = async () => {
+      try {
+        const categories = await getServiceCategories();
+        setServiceCategories(categories);
+      } catch (error) {
+        console.error("Error loading service categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    const filteredProviders = getNearbyProviders(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      selectedService || undefined
-    );
+    loadServices();
+  }, []);
+  
+  // Load providers based on search/filter criteria
+  useEffect(() => {
+    const fetchProviders = async () => {
+      if (!currentLocation) return;
+      
+      try {
+        const fetchedProviders = await getNearbyProviders(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          selectedService || undefined
+        );
 
-    // Apply search term filter if exists
-    const searchFiltered = searchTerm 
-      ? filteredProviders.filter(p => 
-          p.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : filteredProviders;
+        // Apply search term filter if exists
+        if (searchTerm) {
+          const filteredProviders = fetchedProviders.filter(p => 
+            p.name.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          setProviders(filteredProviders);
+        } else {
+          setProviders(fetchedProviders);
+        }
+      } catch (error) {
+        console.error("Error fetching providers:", error);
+        setProviders([]);
+      }
+    };
     
-    setProviders(searchFiltered);
+    fetchProviders();
   }, [currentLocation, selectedService, searchTerm]);
 
   if (!user) {
@@ -74,22 +103,26 @@ const Search = () => {
       </div>
 
       {/* Service Categories */}
-      <div className="p-4">
-        <h2 className="text-lg font-semibold mb-3">Service Categories</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {serviceCategories.map((service) => (
-            <div 
-              key={service.id} 
-              onClick={() => setSelectedService(prev => prev === service.id ? null : service.id)}
-              className={`cursor-pointer rounded-lg border p-3 transition-all ${selectedService === service.id ? 'ring-2 ring-primary border-primary' : 'border-gray-200'}`}
-              style={{ borderLeft: `4px solid ${service.color}` }}
-            >
-              <div className="text-3xl mb-2">{service.icon}</div>
-              <h3 className="text-sm font-medium">{service.name}</h3>
-            </div>
-          ))}
+      {loading ? (
+        <div className="p-4 text-center">Loading services...</div>
+      ) : (
+        <div className="p-4">
+          <h2 className="text-lg font-semibold mb-3">Service Categories</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {serviceCategories.map((service) => (
+              <div 
+                key={service.id} 
+                onClick={() => setSelectedService(prev => prev === service.id ? null : service.id)}
+                className={`cursor-pointer rounded-lg border p-3 transition-all ${selectedService === service.id ? 'ring-2 ring-primary border-primary' : 'border-gray-200'}`}
+                style={{ borderLeft: `4px solid ${service.color}` }}
+              >
+                <div className="text-3xl mb-2">{service.icon}</div>
+                <h3 className="text-sm font-medium">{service.name}</h3>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Search Results */}
       <div className="p-4">

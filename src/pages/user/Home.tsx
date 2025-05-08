@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useLocation as useLocationContext } from "../../context/LocationContext";
-import { serviceCategories } from "../../data/services";
-import { getNearbyProviders } from "../../data/providers";
+import { getServiceCategories } from "../../data/services";
+import { getNearbyProviders, Provider } from "../../data/providers";
 import ServiceCard from "../../components/ServiceCard";
 import ProviderCard from "../../components/ProviderCard";
 import { useAuth } from "../../context/AuthContext";
@@ -14,16 +14,41 @@ const Home = () => {
   const { currentLocation, loading: locationLoading } = useLocationContext();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [nearbyProviders, setNearbyProviders] = useState([] as any[]);
+  const [nearbyProviders, setNearbyProviders] = useState<Provider[]>([]);
+  const [servicesList, setServicesList] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (currentLocation) {
-      const providers = getNearbyProviders(
-        currentLocation.latitude,
-        currentLocation.longitude
-      );
-      setNearbyProviders(providers.slice(0, 3)); // Only show top 3 on home screen
-    }
+    const loadData = async () => {
+      try {
+        const services = await getServiceCategories();
+        setServicesList(services);
+      } catch (error) {
+        console.error("Error loading services:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
+  
+  useEffect(() => {
+    const fetchProviders = async () => {
+      if (currentLocation) {
+        try {
+          const providers = await getNearbyProviders(
+            currentLocation.latitude,
+            currentLocation.longitude
+          );
+          setNearbyProviders(providers.slice(0, 3)); // Only show top 3 on home screen
+        } catch (error) {
+          console.error("Error fetching nearby providers:", error);
+        }
+      }
+    };
+    
+    fetchProviders();
   }, [currentLocation]);
 
   if (!user) {
@@ -71,11 +96,15 @@ const Home = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {serviceCategories.slice(0, 4).map((service) => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-8">Loading services...</div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {servicesList.slice(0, 4).map((service) => (
+              <ServiceCard key={service.id} service={service} />
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Nearby Providers */}

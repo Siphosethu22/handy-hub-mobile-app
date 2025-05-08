@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       
       // Create the metadata with user information
-      const metadata = { 
+      const metadata: Record<string, string> = { 
         name,
         isProvider: isProvider.toString() // Supabase metadata must be string or number
       };

@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { providers } from "../../data/providers";
-import { serviceCategories } from "../../data/services";
+import { getProviderById, Provider } from "../../data/providers";
+import { getServiceById } from "../../data/services";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, MapPin, Clock, Star, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -13,21 +14,33 @@ const ProviderDetail = () => {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
-  const [provider, setProvider] = useState(providers.find(p => p.id === id) || null);
-  const [loading, setLoading] = useState(false);
+  const [provider, setProvider] = useState<Provider | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (id) {
-      const foundProvider = providers.find(p => p.id === id);
-      if (foundProvider) {
-        setProvider(foundProvider);
+    const loadProvider = async () => {
+      try {
+        if (!id) return;
+        
+        const providerData = await getProviderById(id);
+        setProvider(providerData);
+      } catch (error) {
+        console.error("Error loading provider:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    
+    loadProvider();
   }, [id]);
   
   if (!user) {
     navigate("/login");
     return null;
+  }
+  
+  if (loading) {
+    return <div className="p-4 text-center">Loading provider details...</div>;
   }
   
   if (!provider) {
@@ -45,11 +58,19 @@ const ProviderDetail = () => {
     );
   }
 
-  const getServiceNames = () => {
-    return provider.services.map(serviceId => {
-      const service = serviceCategories.find(s => s.id === serviceId);
-      return service ? service.name : serviceId;
-    }).join(", ");
+  const getServiceNames = async () => {
+    try {
+      const servicePromises = provider.services.map(async (serviceId) => {
+        const serviceData = await getServiceById(serviceId);
+        return serviceData ? serviceData.name : serviceId;
+      });
+      
+      const serviceNames = await Promise.all(servicePromises);
+      return serviceNames.join(", ");
+    } catch (error) {
+      console.error("Error getting service names:", error);
+      return provider.services.join(", ");
+    }
   };
 
   const handleBookService = () => {
@@ -126,7 +147,7 @@ const ProviderDetail = () => {
             <div>
               <p className="text-sm text-gray-700">
                 <span className="font-medium">Services: </span>
-                {getServiceNames()}
+                {provider.services.join(", ")}
               </p>
             </div>
             <div>
@@ -161,10 +182,12 @@ const ProviderDetail = () => {
         </div>
         
         {/* Work Examples Section */}
-        <div className="mt-6">
-          <h2 className="font-semibold text-lg mb-3">Previous Work</h2>
-          <WorkExampleCarousel workExamples={provider.workExamples} />
-        </div>
+        {provider.workExamples && provider.workExamples.length > 0 && (
+          <div className="mt-6">
+            <h2 className="font-semibold text-lg mb-3">Previous Work</h2>
+            <WorkExampleCarousel workExamples={provider.workExamples} />
+          </div>
+        )}
         
         {/* Working Hours */}
         <div className="mt-6">

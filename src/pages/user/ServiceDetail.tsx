@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { serviceCategories } from "../../data/services";
-import { getNearbyProviders } from "../../data/providers";
+import { getServiceById } from "../../data/services";
+import { getNearbyProviders, Provider } from "../../data/providers";
 import { useLocation as useLocationContext } from "../../context/LocationContext";
 import ProviderCard from "../../components/ProviderCard";
 import { Button } from "@/components/ui/button";
@@ -14,23 +14,54 @@ const ServiceDetail = () => {
   const { currentLocation } = useLocationContext();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [service, setService] = useState(serviceCategories.find(s => s.id === id) || null);
-  const [providers, setProviders] = useState([]);
+  const [service, setService] = useState<any>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (!currentLocation || !id) return;
+    const loadData = async () => {
+      try {
+        if (!id) return;
+        
+        const serviceData = await getServiceById(id);
+        setService(serviceData);
+      } catch (error) {
+        console.error("Error loading service:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    const serviceProviders = getNearbyProviders(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      id
-    );
-    setProviders(serviceProviders);
+    loadData();
+  }, [id]);
+  
+  useEffect(() => {
+    const loadProviders = async () => {
+      if (!currentLocation || !id) return;
+      
+      try {
+        const providersData = await getNearbyProviders(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          id
+        );
+        setProviders(providersData);
+      } catch (error) {
+        console.error("Error loading providers:", error);
+        setProviders([]);
+      }
+    };
+    
+    loadProviders();
   }, [currentLocation, id]);
 
   if (!user) {
     navigate("/login");
     return null;
+  }
+  
+  if (loading) {
+    return <div className="p-4 text-center">Loading service details...</div>;
   }
   
   if (!service) {
