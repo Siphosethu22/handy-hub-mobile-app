@@ -9,7 +9,140 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      service_categories: {
+        Row: {
+          color: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color: string
+          icon: string
+          id: string
+          name: string
+        }
+        Update: {
+          color?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      service_providers: {
+        Row: {
+          available: boolean | null
+          avatar_url: string | null
+          business_name: string
+          created_at: string | null
+          experience: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          rating: number | null
+          service_category: string
+          total_reviews: number | null
+          verified: boolean | null
+        }
+        Insert: {
+          available?: boolean | null
+          avatar_url?: string | null
+          business_name: string
+          created_at?: string | null
+          experience?: string | null
+          id: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          rating?: number | null
+          service_category: string
+          total_reviews?: number | null
+          verified?: boolean | null
+        }
+        Update: {
+          available?: boolean | null
+          avatar_url?: string | null
+          business_name?: string
+          created_at?: string | null
+          experience?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          rating?: number | null
+          service_category?: string
+          total_reviews?: number | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          is_provider: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          is_provider?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_provider?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      work_examples: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string
+          provider_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          provider_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          provider_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_examples_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

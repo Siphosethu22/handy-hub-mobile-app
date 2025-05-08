@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,19 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginType, setLoginType] = useState<"user" | "provider">("user");
-  const { login, loading } = useAuth();
+  const { login, loading, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // If user is already logged in, redirect accordingly
+    if (user) {
+      if (user.isProvider) {
+        navigate("/provider/dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,17 +34,10 @@ const Login = () => {
     }
     
     try {
-      // Add provider flag to login based on tab selection
-      await login(email, password, loginType === "provider");
+      await login(email, password);
       
-      // Redirect based on user type
-      if (loginType === "provider") {
-        navigate("/provider/dashboard");
-      } else {
-        navigate("/");
-      }
-      
-      toast.success(`Logged in successfully as ${loginType}`);
+      // Note: Navigation will happen in the useEffect when the user state updates
+      toast.success(`Logging in...`);
     } catch (error) {
       console.error("Login failed:", error);
     }

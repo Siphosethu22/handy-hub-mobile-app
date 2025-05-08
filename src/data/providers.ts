@@ -1,3 +1,6 @@
+
+import { supabase } from "../integrations/supabase/client";
+
 export type Provider = {
   id: string;
   name: string;
@@ -23,179 +26,221 @@ export type WorkExample = {
   description: string;
 };
 
-export const providers: Provider[] = [
-  {
-    id: "p1",
-    name: "John's Mechanical Services",
-    services: ["mechanics"],
-    avatar: "https://ui-avatars.com/api/?name=John+Smith&background=FF5733&color=fff",
-    rating: 4.9,
-    totalReviews: 124,
-    experience: "10+ years",
-    available: true,
-    location: {
-      latitude: 37.773972,
-      longitude: -122.431297
-    },
-    verified: true,
-    workExamples: [
-      {
-        id: "we1",
-        imageUrl: "https://images.unsplash.com/photo-1492321936769-b49830bc1d1e",
-        title: "Engine Rebuild",
-        description: "Complete engine rebuild for a classic car"
-      },
-      {
-        id: "we2",
-        imageUrl: "https://images.unsplash.com/photo-1466442929976-97f336a657be",
-        title: "Transmission Repair",
-        description: "Fixed transmission issues on a 2018 sedan"
+export const getProvidersByService = async (serviceId: string): Promise<Provider[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('service_providers')
+      .select(`
+        id,
+        name,
+        business_name,
+        service_category,
+        avatar_url,
+        rating,
+        total_reviews,
+        experience,
+        available,
+        latitude,
+        longitude,
+        verified
+      `)
+      .eq('service_category', serviceId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Transform database results into Provider type
+    const providers: Provider[] = await Promise.all(data.map(async (provider) => {
+      // Fetch work examples for each provider
+      const { data: workExamples, error: workError } = await supabase
+        .from('work_examples')
+        .select('id, image_url, title, description')
+        .eq('provider_id', provider.id);
+      
+      if (workError) {
+        console.error('Error fetching work examples:', workError);
       }
-    ]
-  },
-  {
-    id: "p2",
-    name: "ElectroPro Solutions",
-    services: ["electrical"],
-    avatar: "https://ui-avatars.com/api/?name=Sarah+Johnson&background=FFD700&color=000",
-    rating: 4.7,
-    totalReviews: 89,
-    experience: "8 years",
-    available: true,
-    location: {
-      latitude: 37.783587,
-      longitude: -122.408227
-    },
-    verified: true,
-    workExamples: [
-      {
-        id: "we3",
-        imageUrl: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7",
-        title: "Rewiring Project",
-        description: "Complete house rewiring with modern standards"
-      },
-      {
-        id: "we4",
-        imageUrl: "https://images.unsplash.com/photo-1465379944081-7f47de8d74ac",
-        title: "Smart Home Setup",
-        description: "Full smart home installation with voice controls"
-      }
-    ]
-  },
-  {
-    id: "p3",
-    name: "Quick Tow Services",
-    services: ["tow-trucks"],
-    avatar: "https://ui-avatars.com/api/?name=Mike+Johnson&background=4169E1&color=fff",
-    rating: 4.5,
-    totalReviews: 67,
-    experience: "5 years",
-    available: true,
-    location: {
-      latitude: 37.761226,
-      longitude: -122.423210
-    },
-    verified: false
-  },
-  {
-    id: "p4",
-    name: "Master Plumbers Co.",
-    services: ["plumbers"],
-    avatar: "https://ui-avatars.com/api/?name=Robert+Davis&background=1E90FF&color=fff",
-    rating: 4.8,
-    totalReviews: 112,
-    experience: "12 years",
-    available: false,
-    location: {
-      latitude: 37.765823,
-      longitude: -122.439239
-    },
-    verified: true
-  },
-  {
-    id: "p5",
-    name: "Style & Scissors Salon",
-    services: ["salons"],
-    avatar: "https://ui-avatars.com/api/?name=Emma+Clark&background=FF69B4&color=fff",
-    rating: 4.7,
-    totalReviews: 98,
-    experience: "7 years",
-    available: true,
-    location: {
-      latitude: 37.786526,
-      longitude: -122.412941
-    },
-    verified: true
-  },
-  {
-    id: "p6",
-    name: "DIY Handy Solutions",
-    services: ["handyman"],
-    avatar: "https://ui-avatars.com/api/?name=Tom+Wilson&background=8B4513&color=fff",
-    rating: 4.6,
-    totalReviews: 76,
-    experience: "9 years",
-    available: true,
-    location: {
-      latitude: 37.775384,
-      longitude: -122.417046
-    },
-    verified: true
-  },
-  {
-    id: "p7",
-    name: "Spotless Cleaning Services",
-    services: ["cleaners"],
-    avatar: "https://ui-avatars.com/api/?name=Lisa+Wong&background=20B2AA&color=fff",
-    rating: 4.4,
-    totalReviews: 58,
-    experience: "4 years",
-    available: true,
-    location: {
-      latitude: 37.779432,
-      longitude: -122.418298
-    },
-    verified: true
-  },
-  {
-    id: "p8",
-    name: "Perfect Painters",
-    services: ["painters"],
-    avatar: "https://ui-avatars.com/api/?name=David+Brown&background=9932CC&color=fff",
-    rating: 4.5,
-    totalReviews: 63,
-    experience: "6 years",
-    available: false,
-    location: {
-      latitude: 37.772851,
-      longitude: -122.427455
-    },
-    verified: false
-  }
-];
-
-export const getProvidersByService = (serviceId: string) => {
-  return providers.filter(provider => provider.services.includes(serviceId));
-};
-
-export const getNearbyProviders = (latitude: number, longitude: number, serviceId?: string, maxDistance = 10) => {
-  return providers
-    .map(provider => {
-      const distance = calculateDistance(
-        { latitude, longitude },
-        provider.location
-      );
       
       return {
-        ...provider,
-        distance
+        id: provider.id,
+        name: provider.business_name,
+        services: [provider.service_category], // Array of services
+        avatar: provider.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.business_name)}&background=FF5733&color=fff`,
+        rating: provider.rating,
+        totalReviews: provider.total_reviews,
+        experience: provider.experience,
+        available: provider.available,
+        location: {
+          latitude: provider.latitude || 0,
+          longitude: provider.longitude || 0
+        },
+        verified: provider.verified,
+        workExamples: workExamples ? workExamples.map(we => ({
+          id: we.id,
+          imageUrl: we.image_url,
+          title: we.title,
+          description: we.description
+        })) : []
       };
-    })
-    .filter(provider => 
-      provider.distance <= maxDistance && 
-      (serviceId ? provider.services.includes(serviceId) : true)
-    )
-    .sort((a, b) => (a.distance || 999) - (b.distance || 999));
+    }));
+    
+    return providers;
+  } catch (error) {
+    console.error('Error fetching providers by service:', error);
+    return [];
+  }
+};
+
+export const getNearbyProviders = async (latitude: number, longitude: number, serviceId?: string, maxDistance = 10): Promise<Provider[]> => {
+  try {
+    let query = supabase
+      .from('service_providers')
+      .select(`
+        id,
+        name,
+        business_name,
+        service_category,
+        avatar_url,
+        rating,
+        total_reviews,
+        experience,
+        available,
+        latitude,
+        longitude,
+        verified
+      `);
+    
+    // If service ID is provided, filter by it
+    if (serviceId) {
+      query = query.eq('service_category', serviceId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Transform and filter by distance
+    const providers: Provider[] = await Promise.all(
+      data
+        .filter(provider => provider.latitude && provider.longitude) // Only include providers with location data
+        .map(async (provider) => {
+          // Calculate distance
+          const distance = calculateDistance(
+            { latitude, longitude },
+            { latitude: provider.latitude, longitude: provider.longitude }
+          );
+          
+          // Fetch work examples for this provider
+          const { data: workExamples, error: workError } = await supabase
+            .from('work_examples')
+            .select('id, image_url, title, description')
+            .eq('provider_id', provider.id);
+          
+          if (workError) {
+            console.error('Error fetching work examples:', workError);
+          }
+          
+          return {
+            id: provider.id,
+            name: provider.business_name,
+            services: [provider.service_category], // Array of services
+            avatar: provider.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.business_name)}&background=FF5733&color=fff`,
+            rating: provider.rating,
+            totalReviews: provider.total_reviews,
+            experience: provider.experience,
+            available: provider.available,
+            location: {
+              latitude: provider.latitude,
+              longitude: provider.longitude
+            },
+            distance,
+            verified: provider.verified,
+            workExamples: workExamples ? workExamples.map(we => ({
+              id: we.id,
+              imageUrl: we.image_url,
+              title: we.title,
+              description: we.description
+            })) : []
+          };
+        })
+    );
+    
+    // Filter by distance and sort
+    return providers
+      .filter(provider => provider.distance !== undefined && provider.distance <= maxDistance)
+      .sort((a, b) => (a.distance || 999) - (b.distance || 999));
+  } catch (error) {
+    console.error('Error fetching nearby providers:', error);
+    return [];
+  }
+};
+
+export const getProviderById = async (id: string): Promise<Provider | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('service_providers')
+      .select(`
+        id,
+        name,
+        business_name,
+        service_category,
+        avatar_url,
+        rating,
+        total_reviews,
+        experience,
+        available,
+        latitude,
+        longitude,
+        verified
+      `)
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) {
+      throw error;
+    }
+    
+    // Fetch work examples for this provider
+    const { data: workExamples, error: workError } = await supabase
+      .from('work_examples')
+      .select('id, image_url, title, description')
+      .eq('provider_id', data.id);
+    
+    if (workError) {
+      console.error('Error fetching work examples:', workError);
+    }
+    
+    // Transform into Provider type
+    const provider: Provider = {
+      id: data.id,
+      name: data.business_name,
+      services: [data.service_category], // Array of services
+      avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.business_name)}&background=FF5733&color=fff`,
+      rating: data.rating,
+      totalReviews: data.total_reviews,
+      experience: data.experience,
+      available: data.available,
+      location: {
+        latitude: data.latitude || 0,
+        longitude: data.longitude || 0
+      },
+      verified: data.verified,
+      workExamples: workExamples ? workExamples.map(we => ({
+        id: we.id,
+        imageUrl: we.image_url,
+        title: we.title,
+        description: we.description
+      })) : []
+    };
+    
+    return provider;
+  } catch (error) {
+    console.error('Error fetching provider by ID:', error);
+    return null;
+  }
 };
 
 // Haversine formula to calculate distance between two points

@@ -1,4 +1,6 @@
 
+import { supabase } from "../integrations/supabase/client";
+
 export type Service = {
   id: string;
   name: string;
@@ -6,6 +8,44 @@ export type Service = {
   color: string;
 };
 
+export const getServiceCategories = async (): Promise<Service[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('service_categories')
+      .select('*');
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as Service[];
+  } catch (error) {
+    console.error('Error fetching service categories:', error);
+    return [];
+  }
+};
+
+export const getServiceById = async (id: string): Promise<Service | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('service_categories')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) {
+      throw error;
+    }
+    
+    return data as Service;
+  } catch (error) {
+    console.error('Error fetching service by ID:', error);
+    return null;
+  }
+};
+
+// Legacy variable for backward compatibility during transition
+// This will be removed once all components are updated to use async functions
 export const serviceCategories: Service[] = [
   {
     id: "mechanics",

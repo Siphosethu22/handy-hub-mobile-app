@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -19,9 +20,41 @@ const Register = () => {
   const [businessName, setBusinessName] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
   const [experience, setExperience] = useState("");
+  const [serviceCategories, setServiceCategories] = useState<Array<{id: string, name: string}>>([]);
   
-  const { register, loading } = useAuth();
+  const { register, loading, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // If user is already logged in, redirect accordingly
+    if (user) {
+      if (user.isProvider) {
+        navigate("/provider/dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+    
+    // Fetch service categories from Supabase
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('service_categories')
+          .select('id, name');
+        
+        if (error) {
+          throw error;
+        }
+        
+        setServiceCategories(data || []);
+      } catch (error) {
+        console.error("Error fetching service categories:", error);
+        toast.error("Failed to load service categories");
+      }
+    };
+    
+    fetchCategories();
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,11 +81,13 @@ const Register = () => {
           true, 
           { businessName, serviceCategory, experience }
         );
-        navigate("/provider/dashboard"); // Redirect providers to their dashboard
+        // Navigation will happen in the useEffect when the user state updates
       } else {
         await register(email, password, name, false);
-        navigate("/"); // Redirect regular users to the home page
+        // Navigation will happen in the useEffect when the user state updates
       }
+      
+      toast.success("Registration successful! Redirecting...");
     } catch (error) {
       console.error("Registration failed:", error);
     }
@@ -152,14 +187,11 @@ const Register = () => {
                       <SelectValue placeholder="Select a service category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="plumbers">Plumbing</SelectItem>
-                      <SelectItem value="electrical">Electrical</SelectItem>
-                      <SelectItem value="mechanics">Mechanics</SelectItem>
-                      <SelectItem value="cleaners">Cleaning</SelectItem>
-                      <SelectItem value="painters">Painting</SelectItem>
-                      <SelectItem value="handyman">Handyman</SelectItem>
-                      <SelectItem value="tow-trucks">Tow Truck</SelectItem>
-                      <SelectItem value="salons">Beauty & Salon</SelectItem>
+                      {serviceCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
