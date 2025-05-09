@@ -19,6 +19,9 @@ import ServiceDetail from "./pages/user/ServiceDetail";
 import ProviderDetail from "./pages/user/ProviderDetail";
 import Dashboard from "./pages/provider/Dashboard";
 import Payment from "./pages/provider/Payment";
+import BusinessDetails from "./pages/provider/BusinessDetails";
+import VerifyOtp from "./pages/auth/VerifyOtp";
+import AuthCallback from "./pages/auth/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +38,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/verify-otp" element={<VerifyOtp />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/notifications" element={<Notifications />} />
@@ -43,6 +48,7 @@ const App = () => (
                 <Route path="/provider/:id" element={<ProviderDetail />} />
                 <Route path="/provider/dashboard" element={<Dashboard />} />
                 <Route path="/provider/payment" element={<Payment />} />
+                <Route path="/provider/business-details" element={<BusinessDetails />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

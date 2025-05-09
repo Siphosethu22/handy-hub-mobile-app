@@ -6,57 +6,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, Phone, Facebook, User } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isProvider, setIsProvider] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   
-  // Provider specific fields
-  const [businessName, setBusinessName] = useState("");
-  const [serviceCategory, setServiceCategory] = useState("");
-  const [experience, setExperience] = useState("");
-  const [serviceCategories, setServiceCategories] = useState<Array<{id: string, name: string}>>([]);
-  
-  const { register, loading, user } = useAuth();
+  const { register, loading, user, registerWithPhone, loginWithOAuth } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     // If user is already logged in, redirect accordingly
     if (user) {
       if (user.isProvider) {
-        navigate("/provider/dashboard");
+        // If provider, check if they need to complete business details
+        if (!user.businessName || !user.serviceCategory) {
+          navigate("/provider/business-details");
+        } else {
+          navigate("/provider/dashboard");
+        }
       } else {
         navigate("/");
       }
     }
-    
-    // Fetch service categories from Supabase
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('service_categories')
-          .select('id, name');
-        
-        if (error) {
-          throw error;
-        }
-        
-        setServiceCategories(data || []);
-      } catch (error) {
-        console.error("Error fetching service categories:", error);
-        toast.error("Failed to load service categories");
-      }
-    };
-    
-    fetchCategories();
   }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !password) {
@@ -64,32 +46,43 @@ const Register = () => {
       return;
     }
     
-    // Additional validation for provider fields
-    if (isProvider) {
-      if (!businessName || !serviceCategory || !experience) {
-        toast.error("Please complete your provider profile");
-        return;
+    try {
+      await register(email, password, name, isProvider);
+      
+      if (isProvider) {
+        navigate("/provider/business-details");
+      } else {
+        // Navigation will happen in the useEffect when the user state updates
+        toast.success("Registration successful! Redirecting...");
       }
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
+  };
+
+  const handlePhoneRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name || !phoneNumber) {
+      toast.error("Please fill in all required fields");
+      return;
     }
     
     try {
-      if (isProvider) {
-        await register(
-          email, 
-          password, 
-          name, 
-          true, 
-          { businessName, serviceCategory, experience }
-        );
-        // Navigation will happen in the useEffect when the user state updates
-      } else {
-        await register(email, password, name, false);
-        // Navigation will happen in the useEffect when the user state updates
-      }
-      
-      toast.success("Registration successful! Redirecting...");
+      await registerWithPhone(phoneNumber, name, isProvider);
+      toast.success("Verification code sent to your phone");
     } catch (error) {
-      console.error("Registration failed:", error);
+      console.error("Phone registration failed:", error);
+    }
+  };
+
+  const handleOAuthRegister = async (provider: 'google' | 'facebook') => {
+    try {
+      // Store isProvider choice in localStorage to use after OAuth callback
+      localStorage.setItem('registering_as_provider', isProvider.toString());
+      await loginWithOAuth(provider);
+    } catch (error) {
+      console.error(`${provider} registration failed:`, error);
     }
   };
 
@@ -103,132 +96,157 @@ const Register = () => {
       <div className="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto w-full">
         <h2 className="text-2xl font-semibold mb-6">Create an Account</h2>
         
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name *
-              </label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email *
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password *
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Create a password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Register as a service provider?</span>
-              <Switch 
-                checked={isProvider}
-                onCheckedChange={setIsProvider}
-              />
-            </div>
-            
-            {/* Provider specific fields */}
-            {isProvider && (
-              <>
-                <Separator className="my-4" />
-                
-                <h3 className="font-medium text-lg mb-3">Provider Details</h3>
-                
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-sm">Register as a service provider?</span>
+          <Switch 
+            checked={isProvider}
+            onCheckedChange={setIsProvider}
+          />
+        </div>
+        
+        <Tabs defaultValue="email" onValueChange={(value) => setAuthMethod(value as "email" | "phone")}>
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="email" className="flex-1"><Mail className="h-4 w-4 mr-2" /> Email</TabsTrigger>
+            <TabsTrigger value="phone" className="flex-1"><Phone className="h-4 w-4 mr-2" /> Phone</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="email">
+            <form onSubmit={handleEmailRegister}>
+              <div className="space-y-4">
                 <div>
-                  <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Business Name *
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
                   </label>
                   <Input
-                    id="businessName"
+                    id="name"
                     type="text"
-                    placeholder="Your business name"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="serviceCategory" className="block text-sm font-medium text-gray-700 mb-1">
-                    Service Category *
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
                   </label>
-                  <Select
-                    value={serviceCategory}
-                    onValueChange={setServiceCategory}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a service category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {serviceCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
                 
                 <div>
-                  <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
-                    Experience *
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    Password *
                   </label>
-                  <Select 
-                    value={experience}
-                    onValueChange={setExperience}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Years of experience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-2 years">1-2 years</SelectItem>
-                      <SelectItem value="3-5 years">3-5 years</SelectItem>
-                      <SelectItem value="5-10 years">5-10 years</SelectItem>
-                      <SelectItem value="10+ years">10+ years</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                 </div>
-              </>
-            )}
-            
-            <div className="pt-2">
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={loading}
-              >
-                {loading ? "Creating account..." : "Register"}
-              </Button>
-            </div>
+                
+                <div className="pt-2">
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading}
+                  >
+                    {loading ? "Creating account..." : `Register${isProvider ? ' as Provider' : ''}`}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="phone">
+            <form onSubmit={handlePhoneRegister}>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name-phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <Input
+                    id="name-phone"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number *
+                  </label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1 (123) 456-7890"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="pt-2">
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading}
+                  >
+                    {loading ? "Sending code..." : "Continue with Phone"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
           </div>
-        </form>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <Button 
+            variant="outline" 
+            type="button" 
+            onClick={() => handleOAuthRegister('google')}
+            disabled={loading}
+          >
+            <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Google
+          </Button>
+          <Button 
+            variant="outline" 
+            type="button"
+            onClick={() => handleOAuthRegister('facebook')}
+            disabled={loading}
+          >
+            <Facebook className="mr-2 h-4 w-4 text-blue-600" />
+            Facebook
+          </Button>
+        </div>
         
         <div className="mt-4 text-center text-sm">
           <p>
