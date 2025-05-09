@@ -43,7 +43,9 @@ const AuthCallback = () => {
               .from('service_providers')
               .upsert({
                 id: data.session.user.id,
-                name: data.session.user.user_metadata.full_name || data.session.user.email?.split('@')[0] || 'User'
+                name: data.session.user.user_metadata.full_name || data.session.user.email?.split('@')[0] || 'User',
+                business_name: data.session.user.email?.split('@')[0] || 'New Business',
+                service_category: 'Other'
               });
               
             if (providerError) {

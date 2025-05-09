@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Session, User, Provider } from "@supabase/supabase-js";
 import { supabase } from "../integrations/supabase/client";
@@ -130,8 +129,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         userProfile.businessName = providerData.business_name;
         userProfile.serviceCategory = providerData.service_category;
         userProfile.experience = providerData.experience;
-        userProfile.description = providerData.description;
-        userProfile.address = providerData.address;
+        // Check for optional fields
+        if ('description' in providerData) {
+          userProfile.description = (providerData as any).description;
+        }
+        if ('address' in providerData) {
+          userProfile.address = (providerData as any).address;
+        }
       }
 
       setUser(userProfile);
@@ -242,12 +246,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
           
         // If the user is a provider, create an empty provider profile
-        if (registrationData.isProvider) {
+        if (registrationData.isProvider && data.user) {
           await supabase
             .from('service_providers')
             .upsert({
-              id: data.user?.id,
-              name: registrationData.name
+              id: data.user.id,
+              name: registrationData.name,
+              business_name: registrationData.name + "'s Business",
+              service_category: "Other"
             });
         }
         
