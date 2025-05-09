@@ -24,7 +24,7 @@ const BusinessDetails = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is not logged in or not a provider, redirect to login
+    // If user is not logged in, redirect to login
     if (!user) {
       navigate("/login");
       return;

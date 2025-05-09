@@ -1,116 +1,148 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
+import { ChevronLeft } from "lucide-react";
+
+type LocationState = {
+  phoneNumber: string;
+  isRegistration?: boolean;
+};
 
 const VerifyOtp = () => {
   const [otp, setOtp] = useState("");
-  const [searchParams] = useSearchParams();
-  const phoneNumber = searchParams.get("phone") || "";
-  const [countdown, setCountdown] = useState(60);
+  const [remainingTime, setRemainingTime] = useState(60);
   const { verifyOtp, loginWithPhone, loading } = useAuth();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { phoneNumber, isRegistration } = (location.state as LocationState) || {};
+  
   useEffect(() => {
     if (!phoneNumber) {
       navigate("/login");
+      return;
     }
-
-    // Countdown timer for resend
+    
+    // Set up countdown timer
     const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
-
-    return () => clearInterval(timer);
+    
+    return () => {
+      clearInterval(timer);
+    };
   }, [phoneNumber, navigate]);
-
-  const handleVerify = async () => {
-    if (!phoneNumber) {
-      toast.error("Phone number is missing");
+  
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!otp || otp.length < 6) {
+      toast.error("Please enter a valid verification code");
       return;
     }
-
-    if (otp.length !== 6) {
-      toast.error("Please enter a valid 6-digit code");
-      return;
-    }
-
-    try {
-      await verifyOtp(phoneNumber, otp);
-      toast.success("Phone number verified successfully");
-      navigate("/");
-    } catch (error) {
-      console.error("OTP verification failed:", error);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (!phoneNumber) return;
     
     try {
+      await verifyOtp(phoneNumber, otp);
+      
+      // If this is a registration and user is a provider, redirect to business details
+      const isProvider = localStorage.getItem('phone_registration_is_provider') === 'true';
+      
+      if (isRegistration && isProvider) {
+        localStorage.removeItem('phone_registration_is_provider');
+        navigate("/provider/business-details");
+      } else {
+        navigate("/");
+      }
+      
+      toast.success("Phone number verified successfully");
+    } catch (error) {
+      console.error("OTP verification failed:", error);
+      toast.error("Verification failed. Please try again.");
+    }
+  };
+  
+  const handleResendCode = async () => {
+    try {
       await loginWithPhone(phoneNumber);
-      setCountdown(60);
+      setRemainingTime(60);
       toast.success("New verification code sent");
     } catch (error) {
       console.error("Failed to resend code:", error);
+      toast.error("Failed to resend code. Please try again.");
     }
   };
-
+  
   return (
-    <div className="min-h-screen flex flex-col justify-center p-4 bg-gray-50">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-primary">FixIt</h1>
-        <p className="text-gray-600 mt-2">Verify your phone number</p>
-      </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto w-full">
-        <h2 className="text-2xl font-semibold mb-2">Enter verification code</h2>
-        <p className="text-gray-500 mb-6">
-          We've sent a 6-digit verification code to {phoneNumber}
-        </p>
-        
-        <div className="flex justify-center mb-8">
-          <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-        
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
+      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
         <Button 
-          onClick={handleVerify} 
-          disabled={loading || otp.length !== 6}
-          className="w-full mb-4"
+          variant="ghost" 
+          size="sm" 
+          className="mb-6"
+          onClick={() => navigate(-1)}
         >
-          {loading ? "Verifying..." : "Verify"}
+          <ChevronLeft size={16} className="mr-1" />
+          Back
         </Button>
         
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-500 mb-2">Didn't receive the code?</p>
-          {countdown > 0 ? (
-            <p className="text-sm">Resend code in {countdown}s</p>
-          ) : (
-            <Button 
-              variant="link" 
-              onClick={handleResendCode} 
-              disabled={loading}
-            >
-              Resend Code
-            </Button>
-          )}
-        </div>
+        <h2 className="text-2xl font-semibold mb-6 text-center">Verify Your Phone</h2>
+        
+        <p className="text-gray-600 mb-6 text-center">
+          We've sent a verification code to <span className="font-medium">{phoneNumber}</span>
+        </p>
+        
+        <form onSubmit={handleVerify}>
+          <div className="mb-6">
+            <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
+              Enter verification code
+            </label>
+            <Input
+              id="otp"
+              type="text"
+              placeholder="6-digit code"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="text-center text-lg letter-spacing-wide"
+              maxLength={6}
+              required
+            />
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full mb-4"
+            disabled={loading}
+          >
+            {loading ? "Verifying..." : "Verify"}
+          </Button>
+          
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Didn't receive a code?{" "}
+              {remainingTime > 0 ? (
+                <span>Resend in {remainingTime}s</span>
+              ) : (
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto" 
+                  onClick={handleResendCode}
+                  disabled={loading}
+                >
+                  Resend code
+                </Button>
+              )}
+            </p>
+          </div>
+        </form>
       </div>
     </div>
   );

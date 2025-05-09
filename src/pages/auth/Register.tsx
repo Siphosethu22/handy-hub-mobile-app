@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -69,6 +70,14 @@ const Register = () => {
     try {
       await registerWithPhone(phoneNumber, name, isProvider);
       toast.success("Verification code sent to your phone");
+      // Store isProvider in localStorage to use after OTP verification
+      localStorage.setItem('phone_registration_is_provider', isProvider.toString());
+      navigate("/verify-otp", { 
+        state: { 
+          phoneNumber,
+          isRegistration: true
+        } 
+      });
     } catch (error) {
       console.error("Phone registration failed:", error);
     }

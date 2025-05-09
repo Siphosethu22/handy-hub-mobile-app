@@ -38,18 +38,26 @@ const AuthCallback = () => {
               .update({ is_provider: true })
               .eq('id', data.session.user.id);
               
-            // Create an empty provider profile
-            const { error: providerError } = await supabase
+            // Create an empty provider profile if it doesn't exist
+            const { data: existingProvider } = await supabase
               .from('service_providers')
-              .upsert({
-                id: data.session.user.id,
-                name: data.session.user.user_metadata.full_name || data.session.user.email?.split('@')[0] || 'User',
-                business_name: data.session.user.email?.split('@')[0] || 'New Business',
-                service_category: 'Other'
-              });
+              .select('id')
+              .eq('id', data.session.user.id)
+              .single();
               
-            if (providerError) {
-              console.error("Error creating provider profile:", providerError);
+            if (!existingProvider) {
+              const { error: providerError } = await supabase
+                .from('service_providers')
+                .insert({
+                  id: data.session.user.id,
+                  name: data.session.user.user_metadata.full_name || data.session.user.email?.split('@')[0] || 'User',
+                  business_name: data.session.user.email?.split('@')[0] + "'s Business" || 'New Business',
+                  service_category: 'Other'
+                });
+                
+              if (providerError) {
+                console.error("Error creating provider profile:", providerError);
+              }
             }
             
             // Remove the registration flag
