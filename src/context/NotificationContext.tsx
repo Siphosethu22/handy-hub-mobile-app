@@ -33,7 +33,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         console.error("Failed to parse notifications from localStorage", error);
       }
     } else {
-      // Add initial demo notifications
+      // Add initial demo notifications - removed the "New Plumber Available" notification
       const initialNotifications: Notification[] = [
         {
           id: "1",
@@ -42,14 +42,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           read: false,
           timestamp: new Date().toISOString(),
           type: "system"
-        },
-        {
-          id: "2",
-          title: "New Plumber Available",
-          message: "A new plumber joined in your area. Check their profile!",
-          read: false,
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          type: "job"
         }
       ];
       setNotifications(initialNotifications);
