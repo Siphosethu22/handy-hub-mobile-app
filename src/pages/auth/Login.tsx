@@ -89,6 +89,12 @@ const Login = () => {
     try {
       await loginWithPhone(trimmedPhone);
       toast.success("Verification code sent to your phone");
+      navigate("/verify-otp", { 
+        state: { 
+          phoneNumber: trimmedPhone,
+          isProvider: loginType === "provider"
+        } 
+      });
     } catch (error: any) {
       console.error("Phone login failed:", error);
       toast.error(error.message || "Failed to send verification code. Please try again.");
@@ -97,6 +103,8 @@ const Login = () => {
 
   const handleOAuthLogin = async (provider: 'google') => {
     try {
+      // Store the login type (user/provider) in localStorage
+      localStorage.setItem('login_type', loginType);
       await loginWithOAuth(provider);
       toast.success(`Signing in with ${provider}...`);
     } catch (error: any) {

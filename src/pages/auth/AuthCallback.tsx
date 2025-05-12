@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -25,58 +24,51 @@ const AuthCallback = () => {
           return;
         }
         
-        // Check if this was a registration or login
-        const isRegistering = localStorage.getItem('registering_as_provider');
+        // Check if this was a login or registration
+        const loginType = localStorage.getItem('login_type');
+        const isProvider = loginType === 'provider';
         
-        if (isRegistering) {
-          const isProvider = isRegistering === 'true';
-          
-          // Update the user profile to mark as provider if needed
-          if (isProvider) {
-            await supabase
-              .from('user_profiles')
-              .update({ is_provider: true })
-              .eq('id', data.session.user.id);
-              
-            // Create an empty provider profile if it doesn't exist
-            const { data: existingProvider } = await supabase
+        // Update the user profile if needed
+        if (isProvider) {
+          await supabase
+            .from('user_profiles')
+            .update({ is_provider: true })
+            .eq('id', data.session.user.id);
+            
+          // Create an empty provider profile if it doesn't exist
+          const { data: existingProvider } = await supabase
+            .from('service_providers')
+            .select('id')
+            .eq('id', data.session.user.id)
+            .single();
+            
+          if (!existingProvider) {
+            const { error: providerError } = await supabase
               .from('service_providers')
-              .select('id')
-              .eq('id', data.session.user.id)
-              .single();
+              .insert({
+                id: data.session.user.id,
+                name: data.session.user.user_metadata.full_name || data.session.user.email?.split('@')[0] || 'User',
+                business_name: data.session.user.email?.split('@')[0] + "'s Business" || 'New Business',
+                service_category: 'Other'
+              });
               
-            if (!existingProvider) {
-              const { error: providerError } = await supabase
-                .from('service_providers')
-                .insert({
-                  id: data.session.user.id,
-                  name: data.session.user.user_metadata.full_name || data.session.user.email?.split('@')[0] || 'User',
-                  business_name: data.session.user.email?.split('@')[0] + "'s Business" || 'New Business',
-                  service_category: 'Other'
-                });
-                
-              if (providerError) {
-                console.error("Error creating provider profile:", providerError);
-              }
+            if (providerError) {
+              console.error("Error creating provider profile:", providerError);
             }
-            
-            // Remove the registration flag
-            localStorage.removeItem('registering_as_provider');
-            
-            // Redirect to complete business details
-            toast.success("Please complete your business details");
-            navigate("/provider/business-details");
-            return;
           }
           
-          // Remove the registration flag
-          localStorage.removeItem('registering_as_provider');
+          // Remove the login type flag
+          localStorage.removeItem('login_type');
+          
+          // Redirect to provider dashboard
+          toast.success("Successfully logged in");
+          navigate("/provider/dashboard");
+          return;
         }
         
-        // Handle normal login navigation based on user type
+        // Handle normal user login
+        localStorage.removeItem('login_type');
         toast.success("Successfully logged in");
-        
-        // Navigation will happen in the main app based on user state
         navigate("/");
       } catch (error) {
         console.error("Auth callback error:", error);
