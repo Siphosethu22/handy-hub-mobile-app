@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -30,37 +29,69 @@ const Login = () => {
     }
   }, [user, navigate]);
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    // Trim whitespace from inputs
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    
+    // Validate inputs
+    if (!trimmedEmail || !trimmedPassword) {
       toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (!validateEmail(trimmedEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (trimmedPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long");
       return;
     }
     
     try {
-      await login(email, password);
+      await login(trimmedEmail, trimmedPassword);
       
       // Note: Navigation will happen in the useEffect when the user state updates
-      toast.success(`Logging in...`);
-    } catch (error) {
+      toast.success("Logging in...");
+    } catch (error: any) {
       console.error("Login failed:", error);
+      
+      // Handle specific error cases
+      if (error.message?.includes("invalid_credentials")) {
+        toast.error("Invalid email or password. Please try again.");
+      } else if (error.message?.includes("email not confirmed")) {
+        toast.error("Please verify your email address before logging in.");
+      } else {
+        toast.error("Login failed. Please try again later.");
+      }
     }
   };
 
   const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!phoneNumber) {
+    const trimmedPhone = phoneNumber.trim();
+    
+    if (!trimmedPhone) {
       toast.error("Please enter your phone number");
       return;
     }
     
     try {
-      await loginWithPhone(phoneNumber);
+      await loginWithPhone(trimmedPhone);
       toast.success("Verification code sent to your phone");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Phone login failed:", error);
+      toast.error(error.message || "Failed to send verification code. Please try again.");
     }
   };
 
@@ -68,8 +99,9 @@ const Login = () => {
     try {
       await loginWithOAuth(provider);
       toast.success(`Signing in with ${provider}...`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`${provider} login failed:`, error);
+      toast.error(`Failed to sign in with ${provider}. Please try again.`);
     }
   };
 
@@ -150,6 +182,14 @@ const Login = () => {
               className="text-primary hover:underline cursor-pointer"
             >
               Register
+            </a>
+          </p>
+          <p className="mt-2">
+            <a 
+              onClick={() => navigate("/reset-password")}
+              className="text-primary hover:underline cursor-pointer"
+            >
+              Forgot password?
             </a>
           </p>
         </div>
