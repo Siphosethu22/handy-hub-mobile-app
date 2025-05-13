@@ -1,5 +1,5 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
+import { toast } from "sonner";
 
 type Coordinates = {
   latitude: number;
@@ -11,6 +11,7 @@ type LocationContextType = {
   loading: boolean;
   error: string | null;
   refreshLocation: () => Promise<void>;
+  selectLocation: (location: Coordinates) => void;
 };
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -25,30 +26,32 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
       setLoading(true);
       setError(null);
       
-      // Mock location for now - will use Capacitor Geolocation in real app
-      // For demo, using a random location near San Francisco
-      const mockLat = 37.7749 + (Math.random() - 0.5) * 0.05;
-      const mockLng = -122.4194 + (Math.random() - 0.5) * 0.05;
+      // For demo purposes, using San Francisco as default location
+      const defaultLocation = {
+        latitude: 37.7749,
+        longitude: -122.4194
+      };
       
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+      setCurrentLocation(defaultLocation);
       
-      setCurrentLocation({
-        latitude: mockLat,
-        longitude: mockLng
-      });
     } catch (err) {
       console.error("Error getting location:", err);
       setError("Failed to get your current location");
+      toast.error("Failed to get your location");
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectLocation = (location: Coordinates) => {
+    setCurrentLocation(location);
+    toast.success("Location updated successfully");
   };
 
   const refreshLocation = async () => {
     await getLocation();
   };
 
-  // Get location on initial load
   useEffect(() => {
     getLocation();
   }, []);
@@ -58,7 +61,8 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
       currentLocation, 
       loading, 
       error, 
-      refreshLocation 
+      refreshLocation,
+      selectLocation
     }}>
       {children}
     </LocationContext.Provider>

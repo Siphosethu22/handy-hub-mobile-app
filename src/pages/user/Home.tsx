@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation as useLocationContext } from "../../context/LocationContext";
 import { getServiceCategories } from "../../data/services";
@@ -8,7 +7,8 @@ import ProviderCard from "../../components/ProviderCard";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { MapPin, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import LocationSelector from "@/components/LocationSelector";
 
 const Home = () => {
   const { currentLocation, loading: locationLoading } = useLocationContext();
@@ -41,7 +41,7 @@ const Home = () => {
             currentLocation.latitude,
             currentLocation.longitude
           );
-          setNearbyProviders(providers.slice(0, 3)); // Only show top 3 on home screen
+          setNearbyProviders(providers.slice(0, 3));
         } catch (error) {
           console.error("Error fetching nearby providers:", error);
         }
@@ -58,7 +58,6 @@ const Home = () => {
 
   return (
     <div className="pb-20">
-      {/* Header */}
       <div className="bg-primary text-white p-4">
         <div className="flex justify-between items-center">
           <div>
@@ -68,22 +67,19 @@ const Home = () => {
           <img 
             src={user?.avatar || "https://ui-avatars.com/api/?name=User"} 
             alt="Profile" 
-            className="w-10 h-10 rounded-full"
+            className="w-10 h-10 rounded-full cursor-pointer"
+            onClick={() => navigate("/settings")}
           />
         </div>
         
-        {/* Location */}
-        <div className="mt-4 flex items-center text-sm">
-          <MapPin size={16} className="mr-1" />
-          {locationLoading ? (
-            <span>Finding your location...</span>
-          ) : (
-            <span>Your location: {currentLocation?.latitude.toFixed(4)}, {currentLocation?.longitude.toFixed(4)}</span>
+        <div className="mt-4 flex items-center justify-between">
+          <LocationSelector />
+          {locationLoading && (
+            <span className="text-sm">Finding your location...</span>
           )}
         </div>
       </div>
       
-      {/* Services */}
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Services</h2>
@@ -107,7 +103,6 @@ const Home = () => {
         )}
       </div>
       
-      {/* Nearby Providers */}
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Nearby Providers</h2>
