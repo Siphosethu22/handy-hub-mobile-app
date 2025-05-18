@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ResetPassword from "./pages/auth/ResetPassword";
 import Home from "./pages/user/Home";
 import Search from "./pages/user/Search";
 import Notifications from "./pages/user/Notifications";
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/home" element={<Home />} />
