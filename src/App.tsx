@@ -24,41 +24,45 @@ import BusinessDetails from "./pages/provider/BusinessDetails";
 import VerifyOtp from "./pages/auth/VerifyOtp";
 import AuthCallback from "./pages/auth/AuthCallback";
 
+// Create a new QueryClient as a constant instead of a variable
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <NotificationProvider>
-          <LocationProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/verify-otp" element={<VerifyOtp />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/service/:id" element={<ServiceDetail />} />
-                <Route path="/provider/:id" element={<ProviderDetail />} />
-                <Route path="/provider/dashboard" element={<Dashboard />} />
-                <Route path="/provider/payment" element={<Payment />} />
-                <Route path="/provider/business-details" element={<BusinessDetails />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </LocationProvider>
-        </NotificationProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Make App a proper function component
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <LocationProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/verify-otp" element={<VerifyOtp />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/service/:id" element={<ServiceDetail />} />
+                  <Route path="/provider/:id" element={<ProviderDetail />} />
+                  <Route path="/provider/dashboard" element={<Dashboard />} />
+                  <Route path="/provider/payment" element={<Payment />} />
+                  <Route path="/provider/business-details" element={<BusinessDetails />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </LocationProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
