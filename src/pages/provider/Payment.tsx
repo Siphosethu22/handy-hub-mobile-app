@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, CheckCircle, CreditCard } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Payment = () => {
   const { user } = useAuth();
@@ -60,7 +61,7 @@ const Payment = () => {
     }
   ];
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!selectedPlan) {
       toast.error("Please select a subscription plan");
       return;
@@ -68,12 +69,25 @@ const Payment = () => {
     
     setLoading(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      toast.success("Payment successful! Your account has been upgraded.");
+    try {
+      // Call the Stripe checkout edge function
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan: selectedPlan }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Failed to process payment. Please try again.");
       setLoading(false);
-      navigate("/provider/dashboard");
-    }, 2000);
+    }
   };
 
   return (

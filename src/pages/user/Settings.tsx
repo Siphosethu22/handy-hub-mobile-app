@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Settings as SettingsIcon, User, LogOut, Bell, ChevronLeft, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
@@ -15,7 +17,17 @@ const Settings = () => {
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+    }
+  }, [user]);
   
   if (!user) {
     navigate("/login");
@@ -38,11 +50,62 @@ const Settings = () => {
         
       if (error) throw error;
       
+      // Handle avatar upload if a new file was selected
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase
+          .storage
+          .from('avatars')
+          .upload(fileName, avatarFile);
+          
+        if (uploadError) throw uploadError;
+        
+        const avatarUrl = `${supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl}`;
+        
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({ avatar_url: avatarUrl })
+          .eq('id', user.id);
+          
+        if (updateError) throw updateError;
+      }
+      
       toast.success("Profile updated successfully");
       setEditMode(false);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        user.email,
+        { redirectTo: `${window.location.origin}/reset-password` }
+      );
+        
+      if (error) throw error;
+      
+      toast.success("Password reset email sent. Please check your inbox.");
+    } catch (error) {
+      console.error("Error sending reset password email:", error);
+      toast.error("Failed to send reset password email");
     } finally {
       setLoading(false);
     }
@@ -71,7 +134,7 @@ const Settings = () => {
               <DialogTrigger asChild>
                 <div className="relative cursor-pointer">
                   <img 
-                    src={user?.avatar || "https://ui-avatars.com/api/?name=User"} 
+                    src={avatarPreview || user?.avatar || "https://ui-avatars.com/api/?name=User"} 
                     alt="Profile" 
                     className="w-16 h-16 rounded-full"
                   />
@@ -85,9 +148,22 @@ const Settings = () => {
                   <DialogTitle>Update Profile Picture</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <Input type="file" accept="image/*" />
-                  <Button onClick={() => toast.success("Profile picture updated")}>
-                    Upload
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleAvatarChange}
+                  />
+                  <Button 
+                    onClick={() => {
+                      if (avatarFile) {
+                        handleProfileUpdate();
+                      } else {
+                        toast.error("Please select an image file");
+                      }
+                    }} 
+                    disabled={!avatarFile || loading}
+                  >
+                    {loading ? "Uploading..." : "Upload"}
                   </Button>
                 </div>
               </DialogContent>
@@ -107,7 +183,7 @@ const Settings = () => {
                       onClick={handleProfileUpdate}
                       disabled={loading}
                     >
-                      Save
+                      {loading ? "Saving..." : "Save"}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -126,11 +202,19 @@ const Settings = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs flex items-center"
+                      className="text-xs flex items-center mr-2"
                       onClick={() => setEditMode(true)}
                     >
                       <User size={14} className="mr-1" />
                       Edit Profile
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={handleResetPassword}
+                    >
+                      Reset Password
                     </Button>
                   </div>
                 </>
@@ -152,14 +236,14 @@ const Settings = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <SettingsIcon size={20} className="mr-3 text-gray-600" />
-                <span>Switch to Provider View</span>
+                <span>Provider Settings</span>
               </div>
               <Button 
                 variant="outline"
                 size="sm"
-                onClick={() => navigate("/provider/dashboard")}
+                onClick={() => navigate("/provider/business-details")}
               >
-                Switch
+                Edit
               </Button>
             </div>
           )}

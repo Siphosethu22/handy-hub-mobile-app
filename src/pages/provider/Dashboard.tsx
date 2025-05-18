@@ -1,9 +1,10 @@
+
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Settings, CheckCircle, XCircle, MapPin } from "lucide-react";
+import { Settings, CheckCircle, XCircle, MapPin } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
@@ -50,17 +51,7 @@ const Dashboard = () => {
       
       {/* Provider Actions */}
       <div className="p-4">
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate("/")}
-            className="flex items-center"
-          >
-            <ChevronLeft size={16} className="mr-1" />
-            User View
-          </Button>
-          
+        <div className="flex justify-end items-center mb-6">
           <div className="flex items-center">
             <span className="mr-3 text-sm font-medium">Available for Jobs</span>
             <Switch 

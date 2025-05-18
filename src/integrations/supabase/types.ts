@@ -32,10 +32,12 @@ export type Database = {
       }
       service_providers: {
         Row: {
+          address: string | null
           available: boolean | null
           avatar_url: string | null
           business_name: string
           created_at: string | null
+          description: string | null
           experience: string | null
           id: string
           latitude: number | null
@@ -47,10 +49,12 @@ export type Database = {
           verified: boolean | null
         }
         Insert: {
+          address?: string | null
           available?: boolean | null
           avatar_url?: string | null
           business_name: string
           created_at?: string | null
+          description?: string | null
           experience?: string | null
           id: string
           latitude?: number | null
@@ -62,10 +66,12 @@ export type Database = {
           verified?: boolean | null
         }
         Update: {
+          address?: string | null
           available?: boolean | null
           avatar_url?: string | null
           business_name?: string
           created_at?: string | null
+          description?: string | null
           experience?: string | null
           id?: string
           latitude?: number | null
