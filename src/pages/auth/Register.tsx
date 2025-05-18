@@ -28,18 +28,22 @@ const Register = () => {
   useEffect(() => {
     // If user is already logged in, redirect accordingly
     if (user) {
-      if (user.isProvider) {
-        // If provider, check if they need to complete business details
-        if (!user.businessName || !user.serviceCategory) {
-          navigate("/provider/business-details");
-        } else {
-          navigate("/provider/dashboard");
-        }
-      } else {
-        navigate("/");
-      }
+      redirectBasedOnUserType(user);
     }
   }, [user, navigate]);
+
+  const redirectBasedOnUserType = (user: any) => {
+    if (user.isProvider) {
+      // If provider, check if they need to complete business details
+      if (!user.businessName || !user.serviceCategory) {
+        navigate("/provider/business-details");
+      } else {
+        navigate("/provider/dashboard");
+      }
+    } else {
+      navigate("/home");
+    }
+  }
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +55,9 @@ const Register = () => {
     
     try {
       await register(email, password, name, isProvider);
+      toast.success("Registration successful!");
       
-      if (isProvider) {
-        navigate("/provider/business-details");
-      } else {
-        // Navigation will happen in the useEffect when the user state updates
-        toast.success("Registration successful! Redirecting...");
-      }
+      // The redirect will happen in useEffect when user state is updated
     } catch (error) {
       console.error("Registration failed:", error);
     }
