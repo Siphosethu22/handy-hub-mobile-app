@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { KeyRound, ArrowLeft } from "lucide-react";
+import { KeyRound, ArrowLeft, Mail } from "lucide-react";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -42,7 +42,6 @@ const ResetPassword = () => {
       if (error) throw error;
       
       toast.success("Password reset link sent to your email");
-      navigate("/login");
     } catch (error: any) {
       console.error("Error sending reset password email:", error);
       toast.error(error.message || "Failed to send reset password link");
@@ -171,7 +170,7 @@ const ResetPassword = () => {
         )}
         
         <div className="mt-6 flex items-center justify-center gap-2 text-sm text-center">
-          <KeyRound className="h-4 w-4 text-primary" />
+          <Mail className="h-4 w-4 text-primary" />
           <span>Check your email for the reset link</span>
         </div>
       </Card>

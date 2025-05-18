@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 interface EmailLoginFormProps {
   email: string;
@@ -22,6 +23,8 @@ const EmailLoginForm = ({
   loading,
   isProvider = false
 }: EmailLoginFormProps) => {
+  const navigate = useNavigate();
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-4">
@@ -49,6 +52,14 @@ const EmailLoginForm = ({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <div className="text-right mt-1">
+            <a 
+              onClick={() => navigate("/reset-password")} 
+              className="text-sm text-primary hover:underline cursor-pointer"
+            >
+              Forgot password?
+            </a>
+          </div>
         </div>
         
         <div className="pt-2">

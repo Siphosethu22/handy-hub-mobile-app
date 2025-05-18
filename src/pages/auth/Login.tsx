@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Import our new components
+// Import our components
 import UserTypeTab from "@/components/auth/UserTypeTab";
 import EmailLoginForm from "@/components/auth/EmailLoginForm";
 import PhoneLoginForm from "@/components/auth/PhoneLoginForm";
