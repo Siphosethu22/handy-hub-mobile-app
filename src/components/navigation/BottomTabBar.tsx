@@ -2,12 +2,12 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Search, Bell, MessageSquare, User } from "lucide-react";
-import { useNotification } from "../../context/NotificationContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 const BottomTabBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasUnreadNotifications } = useNotification();
+  const { unreadCount } = useNotifications();
   
   const tabs = [
     { label: "Home", icon: Home, path: "/home" },
@@ -17,7 +17,7 @@ const BottomTabBar = () => {
       label: "Notifications", 
       icon: Bell, 
       path: "/notifications",
-      badge: hasUnreadNotifications 
+      badge: unreadCount > 0 
     },
     { label: "Settings", icon: User, path: "/settings" },
   ];
@@ -28,12 +28,18 @@ const BottomTabBar = () => {
         {tabs.map((tab) => (
           <div 
             key={tab.label}
-            className={`bottom-tab flex-1 ${location.pathname === tab.path ? 'active-tab' : 'text-gray-500'}`}
+            className={`flex flex-col items-center justify-center cursor-pointer py-1 ${
+              location.pathname === tab.path ? 'text-primary' : 'text-gray-500'
+            }`}
             onClick={() => navigate(tab.path)}
           >
             <div className="relative">
               <tab.icon size={20} />
-              {tab.badge && <span className="notification-badge">!</span>}
+              {tab.badge && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </div>
             <span className="text-xs mt-1">{tab.label}</span>
           </div>
