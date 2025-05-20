@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Send } from "lucide-react";
 import { supabase } from "../../integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import BottomTabBar from "../../components/navigation/BottomTabBar";
 
 interface Message {
   id: string;
@@ -43,9 +45,31 @@ const Messaging = () => {
       if (contact) {
         setSelectedContact(contact);
         loadMessages(contact.id);
+        
+        // Set up real-time subscription for messages
+        const channel = supabase
+          .channel('messages-channel')
+          .on('postgres_changes', 
+            { 
+              event: 'INSERT', 
+              schema: 'public', 
+              table: 'messages',
+              filter: `senderId=eq.${user?.id},receiverId=eq.${contact.id}` 
+            },
+            (payload) => {
+              console.log('New message received:', payload);
+              const newMsg = payload.new as Message;
+              setMessages(prevMessages => [...prevMessages, newMsg]);
+            }
+          )
+          .subscribe();
+          
+        return () => {
+          supabase.removeChannel(channel);
+        };
       }
     }
-  }, [id, contacts]);
+  }, [id, contacts, user?.id]);
 
   const loadContacts = async () => {
     setLoading(true);
@@ -72,7 +96,8 @@ const Messaging = () => {
           const formattedContacts = providers.map(provider => ({
             id: provider.id,
             name: provider.business_name,
-            avatar: provider.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.business_name)}`
+            avatar: provider.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.business_name)}`,
+            providerId: provider.id // Store the provider ID for navigation
           }));
           setContacts(formattedContacts);
         }
@@ -127,12 +152,22 @@ const Messaging = () => {
     
     setMessages([...messages, newMsg]);
     setNewMessage("");
+    
+    // Here we would also send the message to the Supabase database
+    // For now this is just a placeholder
+    console.log("Sending message to database:", newMsg);
+  };
+  
+  const handleContactProfileClick = (contactId: string) => {
+    if (selectedContact?.providerId) {
+      navigate(`/provider/${selectedContact.providerId}`);
+    }
   };
 
   if (!user) return null;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen pb-16">
       {/* Header */}
       <div className="bg-primary text-white p-4">
         <div className="flex items-center">
@@ -154,6 +189,21 @@ const Messaging = () => {
       {selectedContact ? (
         // Chat view
         <div className="flex-1 flex flex-col p-4 overflow-hidden">
+          {/* Provider profile at the top */}
+          <div 
+            className="flex items-center p-2 mb-4 bg-gray-50 rounded-lg cursor-pointer"
+            onClick={() => handleContactProfileClick(selectedContact.id)}
+          >
+            <Avatar className="h-10 w-10 mr-3">
+              <AvatarImage src={selectedContact.avatar} alt={selectedContact.name} />
+              <AvatarFallback>{selectedContact.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium">{selectedContact.name}</p>
+              <p className="text-xs text-gray-500">Tap to view profile</p>
+            </div>
+          </div>
+          
           {/* Messages */}
           <div className="flex-1 overflow-y-auto mb-4 space-y-4">
             {messages.map((message) => (
@@ -162,11 +212,10 @@ const Messaging = () => {
                 className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
               >
                 {message.senderId !== user?.id && (
-                  <img 
-                    src={message.senderAvatar} 
-                    alt={message.senderName} 
-                    className="w-8 h-8 rounded-full mr-2"
-                  />
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarImage src={message.senderAvatar} alt={message.senderName} />
+                    <AvatarFallback>{message.senderName.charAt(0)}</AvatarFallback>
+                  </Avatar>
                 )}
                 <div 
                   className={`max-w-[70%] rounded-lg p-3 ${
@@ -183,11 +232,10 @@ const Messaging = () => {
                   </p>
                 </div>
                 {message.senderId === user?.id && (
-                  <img 
-                    src={message.senderAvatar} 
-                    alt={message.senderName} 
-                    className="w-8 h-8 rounded-full ml-2"
-                  />
+                  <Avatar className="h-8 w-8 ml-2">
+                    <AvatarImage src={message.senderAvatar} alt={message.senderName} />
+                    <AvatarFallback>{message.senderName.charAt(0)}</AvatarFallback>
+                  </Avatar>
                 )}
               </div>
             ))}
@@ -227,11 +275,10 @@ const Messaging = () => {
                       navigate(`/messaging/${contact.id}`);
                     }}
                   >
-                    <img 
-                      src={contact.avatar} 
-                      alt={contact.name} 
-                      className="w-10 h-10 rounded-full mr-3"
-                    />
+                    <Avatar className="h-10 w-10 mr-3">
+                      <AvatarImage src={contact.avatar} alt={contact.name} />
+                      <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
                     <div>
                       <h3 className="font-medium">{contact.name}</h3>
                       <p className="text-sm text-gray-500">Tap to chat</p>
@@ -250,6 +297,11 @@ const Messaging = () => {
           )}
         </div>
       )}
+      
+      {/* Bottom Tab Bar */}
+      <div className="mt-auto">
+        <BottomTabBar />
+      </div>
     </div>
   );
 };

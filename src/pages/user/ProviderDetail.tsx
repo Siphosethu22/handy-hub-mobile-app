@@ -4,10 +4,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getProviderById, Provider } from "../../data/providers";
 import { getServiceById } from "../../data/services";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MapPin, Clock, Star, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, MapPin, Clock, Star, CheckCircle, XCircle, MessageSquare } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationContext";
 import WorkExampleCarousel from "../../components/WorkExampleCarousel";
+import BottomTabBar from "../../components/navigation/BottomTabBar";
 
 const ProviderDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,20 +41,28 @@ const ProviderDetail = () => {
   }
   
   if (loading) {
-    return <div className="p-4 text-center">Loading provider details...</div>;
+    return (
+      <div>
+        <div className="p-4 text-center">Loading provider details...</div>
+        <BottomTabBar />
+      </div>
+    );
   }
   
   if (!provider) {
     return (
-      <div className="p-4 text-center">
-        <p>Provider not found</p>
-        <Button 
-          onClick={() => navigate("/")}
-          variant="outline"
-          className="mt-4"
-        >
-          Back to Home
-        </Button>
+      <div>
+        <div className="p-4 text-center">
+          <p>Provider not found</p>
+          <Button 
+            onClick={() => navigate("/")}
+            variant="outline"
+            className="mt-4"
+          >
+            Back to Home
+          </Button>
+        </div>
+        <BottomTabBar />
       </div>
     );
   }
@@ -87,6 +96,10 @@ const ProviderDetail = () => {
       setLoading(false);
       navigate("/notifications");
     }, 1500);
+  };
+
+  const handleMessageProvider = () => {
+    navigate(`/messaging/${provider.id}`);
   };
 
   return (
@@ -214,10 +227,10 @@ const ProviderDetail = () => {
           </div>
         </div>
         
-        {/* Booking button */}
-        <div className="mt-8 mb-4">
+        {/* Action buttons */}
+        <div className="mt-8 mb-4 flex space-x-2">
           <Button 
-            className="w-full" 
+            className="flex-1" 
             size="lg"
             disabled={!provider.available || loading}
             onClick={handleBookService}
@@ -225,13 +238,26 @@ const ProviderDetail = () => {
             {loading ? "Sending Request..." : "Book Service"}
           </Button>
           
-          {!provider.available && (
-            <p className="text-center text-sm text-red-500 mt-2">
-              This provider is currently unavailable
-            </p>
-          )}
+          <Button
+            className="flex-1"
+            size="lg"
+            variant="outline"
+            onClick={handleMessageProvider}
+          >
+            <MessageSquare size={16} className="mr-2" />
+            Message
+          </Button>
         </div>
+        
+        {!provider.available && (
+          <p className="text-center text-sm text-red-500 mt-2">
+            This provider is currently unavailable
+          </p>
+        )}
       </div>
+      
+      {/* Bottom Tab Bar */}
+      <BottomTabBar />
     </div>
   );
 };

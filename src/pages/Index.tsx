@@ -44,6 +44,9 @@ const Index = () => {
       return <Notifications />;
     } else if (path === "/settings") {
       return <Settings />;
+    } else if (path.includes("/messaging")) {
+      // Skip rendering bottom tab bar for messaging page as it's added in the component
+      return null;
     }
     
     return <Home />;
@@ -59,10 +62,12 @@ const Index = () => {
 
   // If logged in as a regular user, show the main UI with bottom tabs
   if (user && !user.isProvider) {
+    const currentPage = renderCurrentPage();
+    
     return (
       <div className="min-h-screen bg-gray-50">
-        {renderCurrentPage()}
-        <BottomTabBar />
+        {currentPage}
+        {!location.pathname.includes("/messaging") && <BottomTabBar />}
       </div>
     );
   }
