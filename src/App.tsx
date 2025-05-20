@@ -23,8 +23,9 @@ import Payment from "./pages/provider/Payment";
 import BusinessDetails from "./pages/provider/BusinessDetails";
 import VerifyOtp from "./pages/auth/VerifyOtp";
 import AuthCallback from "./pages/auth/AuthCallback";
+import Messaging from "./pages/messaging/Messaging";
 
-// Create a new QueryClient as a constant instead of a variable
+// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
 // Make App a proper function component
@@ -54,6 +55,8 @@ const App = () => {
                   <Route path="/provider/dashboard" element={<Dashboard />} />
                   <Route path="/provider/payment" element={<Payment />} />
                   <Route path="/provider/business-details" element={<BusinessDetails />} />
+                  <Route path="/messaging" element={<Messaging />} />
+                  <Route path="/messaging/:id" element={<Messaging />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>

@@ -1,51 +1,44 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Bell, Settings } from "lucide-react";
-import { useNotifications } from "../../context/NotificationContext";
-import { cn } from "@/lib/utils";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Home, Search, Bell, MessageSquare, User } from "lucide-react";
+import { useNotification } from "../../context/NotificationContext";
 
 const BottomTabBar = () => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const { unreadCount } = useNotifications();
+  const { hasUnreadNotifications } = useNotification();
   
   const tabs = [
-    { path: "/", icon: <Home size={24} />, label: "Home" },
-    { path: "/search", icon: <Search size={24} />, label: "Search" },
+    { label: "Home", icon: Home, path: "/home" },
+    { label: "Search", icon: Search, path: "/search" },
+    { label: "Messages", icon: MessageSquare, path: "/messaging" },
     { 
-      path: "/notifications", 
-      icon: (
-        <div className="relative">
-          <Bell size={24} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </div>
-      ), 
-      label: "Notifications" 
+      label: "Notifications", 
+      icon: Bell, 
+      path: "/notifications",
+      badge: hasUnreadNotifications 
     },
-    { path: "/settings", icon: <Settings size={24} />, label: "Settings" },
+    { label: "Settings", icon: User, path: "/settings" },
   ];
-
+  
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 px-4 z-10">
-      {tabs.map((tab) => (
-        <Link 
-          key={tab.path} 
-          to={tab.path}
-          className={cn(
-            "flex flex-col items-center justify-center w-full",
-            location.pathname === tab.path 
-              ? "text-primary" 
-              : "text-gray-500"
-          )}
-        >
-          {tab.icon}
-          <span className="text-xs mt-1">{tab.label}</span>
-        </Link>
-      ))}
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md border-t border-gray-100 z-10">
+      <div className="flex justify-around items-center h-16">
+        {tabs.map((tab) => (
+          <div 
+            key={tab.label}
+            className={`bottom-tab flex-1 ${location.pathname === tab.path ? 'active-tab' : 'text-gray-500'}`}
+            onClick={() => navigate(tab.path)}
+          >
+            <div className="relative">
+              <tab.icon size={20} />
+              {tab.badge && <span className="notification-badge">!</span>}
+            </div>
+            <span className="text-xs mt-1">{tab.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

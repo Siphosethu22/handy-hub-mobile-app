@@ -94,5 +94,29 @@ export const serviceCategories: Service[] = [
     name: "Painters",
     icon: "🎨",
     color: "#9932CC",
+  },
+  {
+    id: "locksmith",
+    name: "Locksmith",
+    icon: "🔑",
+    color: "#DAA520",
+  },
+  {
+    id: "gardeners",
+    name: "Gardeners",
+    icon: "🌱",
+    color: "#228B22",
+  },
+  {
+    id: "pest-control",
+    name: "Pest Control",
+    icon: "🐜",
+    color: "#A52A2A",
+  },
+  {
+    id: "movers",
+    name: "Movers",
+    icon: "📦",
+    color: "#CD853F",
   }
 ];
